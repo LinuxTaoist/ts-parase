@@ -21,5 +21,7 @@ int main(int argc, char *argv[])
     PRINT_INFO("ts file name: %s.\n", argv[1]);
 
     Parse::GetInstance()->get_path(argv[1]);
+    Parse::GetInstance()->data_process();
+
     return 0;
 }

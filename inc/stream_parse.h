@@ -11,8 +11,11 @@
 ********************************************************************************
 */
 
-#ifndef __stream_PARSE_H__
-#define __stream_PARSE_H__
+#ifndef __STREAM_PARSE_H__
+#define __STREAM_PARSE_H__
+
+#include <stdio.h>
+#include "ts_protocol.h"
 
 #define PATH_LEN 30
 
@@ -23,7 +26,25 @@ public:
 
     static Parse* GetInstance();
 
-    void unpacket();
+    /*
+     * @brief: 数据处理中心
+     */
+    void data_process();
+ 
+    /*
+     * @brief: 将流文件拆解为帧数据
+     */
+    int unpacket(struct ORIGIN_DATA *frame);
+
+    /* 
+     * @brief: 帧数据处理
+     */
+    int frame_process(struct ORIGIN_DATA *frame);
+
+    /*
+     * @brief: 获取数据包头
+     */
+    int get_packet_header(struct ORIGIN_DATA *frame);
 
     int get_packet_lenth(char *buffer);
 
@@ -32,7 +53,8 @@ private:
     char *path;
     FILE *ts_fp;
     unsigned long packet_lenth;
-
+    struct PACT_DATA pact_data;
+    void msg_set(enum MSG_STATUS status);
 };
 
 #endif
