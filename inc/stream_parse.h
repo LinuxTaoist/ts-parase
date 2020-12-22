@@ -54,7 +54,8 @@ private:
     FILE *ts_fp;
     unsigned long packet_lenth;
     struct PACT_DATA pact_data;
-    void msg_set(enum MSG_STATUS status);
+    void set_msg_status(enum MSG_STATUS status);
+    MSG_STATUS get_msg_status();
 };
 
 #endif
