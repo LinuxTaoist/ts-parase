@@ -16,12 +16,16 @@
 #include <string.h>
 #include "stream_parse.h"
 #include "pat_decode.h"
+#include "pmt_decode.h"
 #include "log.h"
 
 using namespace std;
 
+#define PMT_NUM_MAX 100
+
 static enum MSG_STATUS process_status = MSG_DEFAULT;
 static struct ORIGIN_DATA tmp_frame;
+static struct TS_PMT pmt_info[PMT_NUM_MAX];
 
 static unsigned int packet_position = 0;
 
@@ -86,16 +90,12 @@ void Parse::data_process()
 
     while(!feof(ts_fp)) {
         packet_position++;
-        memset((void *)&ts_frame, 0, sizeof(ts_frame));
+        memset((void *)&ts_frame, 0, sizeof(struct ORIGIN_DATA));
         unpacket(&ts_frame);
         
         if (get_msg_status() == MSG_COMPLETE) {
             frame_process(&ts_frame);
-            //PRINT_HEADER();
-            //PRINT_INFO("\n");
         }
-
-       // PRINT_INFO("0x%x ", ts_frame.data[c++]);
     }
 
     if(ts_fp) {
@@ -108,25 +108,23 @@ int Parse::unpacket(struct ORIGIN_DATA *frame)
     int ret = 0;
     static int index =0;
 
-    /* 收集一帧数据后，发出处理消息 */
+    /* 收集一帧数据后，发出处理消息。 还需要过滤优化 2020-12-23 */
     tmp_frame.data[index] = fgetc(ts_fp);
     if (tmp_frame.data[index] != PACKET_SYNC_BYTE
         || get_msg_status() == MSG_DEFAULT) {
-        //PRINT_DEBUG("busy! \r\n");
+
         index++;
         set_msg_status(MSG_BUSY);
     } else if (tmp_frame.data[index] == PACKET_SYNC_BYTE
                && get_msg_status() != MSG_DEFAULT) {
+
         /* 收集完一帧数据，发出完成消息 */
-        //PRINT_DEBUG("complate! \r\n");
         tmp_frame.lenth = index;
         index = 0;
         tmp_frame.data[index++] = PACKET_SYNC_BYTE; //补充丢失包头同步字节
         set_msg_status(MSG_COMPLETE);
-        memcpy(frame, &tmp_frame, sizeof(tmp_frame));
-        memset((void *)&tmp_frame, 0, sizeof(tmp_frame));
-        //show_hex(frame->data, frame->lenth);
-        //PRINT_INFO("\n");
+        memcpy(frame, &tmp_frame, sizeof(struct ORIGIN_DATA));
+        memset((void *)&tmp_frame, 0, sizeof(struct ORIGIN_DATA));
     } 
 
     ret = 0;
@@ -135,23 +133,27 @@ int Parse::unpacket(struct ORIGIN_DATA *frame)
 int Parse::frame_process(struct ORIGIN_DATA *frame)
 {
     int ret = 0;
+    unsigned int i = 0;
     static int debug = 0;
     memset((void *)&pact_data, 0, sizeof(pact_data));
     get_packet_header(frame);
 
     /* 获取PAT表信息 */
     if (pact_data.header.pid_13b == PAT_PID) {
-            PatDecode::GetInstance()->get_pat_info(
-                pact_data.buffer);
-#if 0
-        if(debug == 0) {
-            debug =1;
-            PRINT_HEADER();
-            show_hex(&pact_data.buffer[EFFECTIVE_START_POSITION 
-                         + pact_data.header.effective_start_indicator_1b],30);
+            PatDecode::GetInstance()->get_pat_info(pact_data.buffer);
+    } else if (0) {         //音频
+    
+    } else if (0) {         //视频
+    
+    } else {
+        for (i = 0; i < pmt_pid_collection.count; i++) {
+            if (pact_data.header.pid_13b 
+                == pmt_pid_collection.info[i].pmt_13b) {
 
+                PmtDecode::GetInstance()->get_pmt_info(pact_data.buffer, 
+                                                       &pmt_info[i]);
+            }
         }
-#endif
     }
 
     return ret;
