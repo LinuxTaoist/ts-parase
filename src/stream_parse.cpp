@@ -19,6 +19,12 @@
 #include "pmt_decode.h"
 #include "log.h"
 
+#define __DEBUG_CODE__
+
+#ifdef __DEBUG_CODE__
+#include "debug_code.h"
+#endif
+
 using namespace std;
 
 #define PMT_NUM_MAX 100
@@ -28,38 +34,7 @@ static struct ORIGIN_DATA tmp_frame;
 static struct TS_PMT pmt_info[PMT_NUM_MAX];
 
 static unsigned int packet_position = 0;
-
-#define PRINT_HEADER() \
-{                      \
-    PRINT_INFO("packet_position: %u\n\
-    sync_indicator_8b:            0x%x \n\
-    error_indicator_1b:           0x%x \n\
-    effective_start_indicator_1b: 0x%x \n\
-    priority_indicator_1b:        0x%x \n\
-    pid_13b:                      0x%x \n\
-    scramble_control_2b:          0x%x \n\
-    adaptation_contorl_2b:        0x%x \n\
-    continue_counter_4b:          0x%x \n",\
-    packet_position,                               \
-    pact_data.header.sync_indicator_8b,            \
-    pact_data.header.error_indicator_1b,           \
-    pact_data.header.effective_start_indicator_1b, \
-    pact_data.header.priority_indicator_1b,        \
-    pact_data.header.pid_13b,                      \
-    pact_data.header.scramble_control_2b,          \
-    pact_data.header.adaptation_contorl_2b,        \
-    pact_data.header.continue_counter_4b);         \
-}
-
-static void show_hex(unsigned char *str, unsigned int lenth)
-{
-    int i = 0;
-
-    PRINT_INFO("hex_string: ");
-    for(; i<lenth; i++) {
-        PRINT_INFO(" 0x%x", str[i]);
-    }
-}
+static unsigned int pmt_index = 0; 
 
 Parse::Parse()
 {
@@ -97,7 +72,7 @@ void Parse::data_process()
             frame_process(&ts_frame);
         }
     }
-
+    PRINT_PMT_INFO();
     if(ts_fp) {
         fclose(ts_fp);
     }
@@ -135,7 +110,7 @@ int Parse::frame_process(struct ORIGIN_DATA *frame)
     int ret = 0;
     unsigned int i = 0;
     static int debug = 0;
-    memset((void *)&pact_data, 0, sizeof(pact_data));
+//    memset((void *)&pact_data, 0, sizeof(pact_data));
     get_packet_header(frame);
 
     /* 获取PAT表信息 */
@@ -146,12 +121,14 @@ int Parse::frame_process(struct ORIGIN_DATA *frame)
     } else if (0) {         //视频
     
     } else {
-        for (i = 0; i < pmt_pid_collection.count; i++) {
+
+        for (i = 0; i < pmt_pid_collection.count 
+                    && pmt_index < pmt_pid_collection.count; i++) {
             if (pact_data.header.pid_13b 
                 == pmt_pid_collection.info[i].pmt_13b) {
-
+  
                 PmtDecode::GetInstance()->get_pmt_info(pact_data.buffer, 
-                                                       &pmt_info[i]);
+                                             &pmt_info[pmt_index], &pmt_index);
             }
         }
     }
@@ -187,7 +164,3 @@ int Parse::get_packet_header(struct ORIGIN_DATA *frame)
     return 0;
 }
 
-int Parse::get_packet_lenth(char *buffer)
-{
-    
-}

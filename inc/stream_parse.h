@@ -46,7 +46,6 @@ public:
      */
     int get_packet_header(struct ORIGIN_DATA *frame);
 
-    int get_packet_lenth(char *buffer);
 
 private:
     char *buffer;

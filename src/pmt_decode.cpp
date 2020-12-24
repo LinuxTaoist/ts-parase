@@ -15,6 +15,8 @@
 #include <string.h>
 #include "pmt_decode.h"
 #include "ts_protocol.h"
+#include "debug_code.h"
+
 /* @brief: 实例化 */
 PmtDecode* PmtDecode::GetInstance()
 {
@@ -23,15 +25,19 @@ PmtDecode* PmtDecode::GetInstance()
 }
 
 /* @brief: 解析pmt信息 */
-int PmtDecode::get_pmt_info(unsigned char *data, struct TS_PMT *pmt_info)
+bool PmtDecode::get_pmt_info(unsigned char *data, struct TS_PMT *pmt_info, unsigned int *index)
 {
-    unsigned char *pos;
-    unsigned int crc_32 = 0, i = 0, section_length = 0, crc_start_position = 0;
+    unsigned char *pos, *pDesc;
+    unsigned int crc_32 = 0, i = 0, crc_start_position = 0;
+    int program_info_length = 0, section_length = 0, es_info_length = 0, descriptor_length = 0;
     struct TS_PMT tmp_pmt_info;
 
     memset(&tmp_pmt_info, 0, sizeof(struct TS_PMT));
-
     tmp_pmt_info.table_id_8b = data[0];
+    if (tmp_pmt_info.table_id_8b != PMT_SECTION) {
+        return false;
+    }
+
     tmp_pmt_info.section_syntax_indicator_1b = data[1] >> 7; 
     tmp_pmt_info.zero_1b = (data[1] & 0x40) >> 6;
     tmp_pmt_info.reserved_1_2b = (data[1] & 0x30) >> 4;
@@ -54,15 +60,30 @@ int PmtDecode::get_pmt_info(unsigned char *data, struct TS_PMT *pmt_info)
                      | data[crc_start_position] << 8 
                      | data[crc_start_position];
 
-    if (tmp_pmt_info.CRC_32 == pmt_info->CRC_32) {
-        return 0;
+    if (tmp_pmt_info.CRC_32 == pmt_info->CRC_32 && pmt_info->CRC_32 != 0) {
+        return false;
     }
 
-    pos = &data[12];  // pointer to stream_type
-    section_length = crc_start_position - PROGRAM_INFO_START_POSITION;
-    while (section_length > 0) {
+    /* The length between first stream_type and crc  */
+    section_length = tmp_pmt_info.section_length_12b - 13 - program_info_length;
 
+    pos = &data[10];                 //pos pointer to program_info_length
+    program_info_length = tmp_pmt_info.program_info_length_12b;
+
+    /* loop: look for program descriptor */
+    for(;program_info_length > 0;) {
+        PRINT_DEBUG("program_info_length: 0x%x", program_info_length);
+    }
+
+    pos += 2 + program_info_length;  // pos pointer to stream_type
+
+    /* loop: look for program audio and video pid */
+    for (i = 0; section_length > 0;) {
+
+        /* 检测stream_type类型是否存在 */
         if(check_stream_type(pos[0])) {
+            //PRINT_DEBUG("dx_debug: Pos : \n");
+            //show_hex(pos, 10);
             tmp_pmt_info.compent[i].stream_type_8b = pos[0];
             tmp_pmt_info.compent[i].reserved_5_3b = pos[1] >> 5;
             tmp_pmt_info.compent[i].elementary_pid_13b = 
@@ -71,12 +92,42 @@ int PmtDecode::get_pmt_info(unsigned char *data, struct TS_PMT *pmt_info)
             tmp_pmt_info.compent[i].reserved_6_4b = pos[3] >> 4;
             tmp_pmt_info.compent[i].es_info_length_12b = 
                                             (pos[3] & 0x0F)<<8 | pos[4];
+
+            es_info_length = tmp_pmt_info.compent[i].es_info_length_12b;
+
+            /* loop: es_info_length 
+             * pDesc pointer to descriptor_tag
+             */
+            for (pDesc = &(pos[5]); es_info_length > 0; ) {
+                //PRINT_DEBUG("es_descriptor.descriptor_tag: 0x%x \n", pDesc[0]);
+                tmp_pmt_info.compent[i].es_descriptor.descriptor_tag = pDesc[0];
+                tmp_pmt_info.compent[i].es_descriptor.descriptor_length = pDesc[1];
+                descriptor_length = pDesc[1];
+
+                if (descriptor_length > 0) {
+                    tmp_pmt_info.compent[i].es_descriptor.descriptor_data.language_code 
+                            = pDesc[2] << 16 | pDesc[3] << 8 | pDesc[4];
+                    tmp_pmt_info.compent[i].es_descriptor.descriptor_data.audio_type = pDesc[5];
+                }
+
+                es_info_length -= 2 + descriptor_length;
+                pDesc += 2 + descriptor_length;
+                //PRINT_DEBUG("****** es_info_length: %d \n", es_info_length);
+            }
+            i++;
+            //PRINT_DEBUG("!!!dx_debug: compent index :%d \n", i);
         }
+
+        /* skip the next stream_type */
+        section_length -=  5 + ((pos[3] & 0x0F) << 8) + pos[4];
+        pos = pos + 5 + ((pos[3] & 0x0F) << 8) + pos[4];
     }
 
+    *index = *index + 1;
     memcpy(pmt_info, &tmp_pmt_info, sizeof(struct TS_PMT));
-
-    return 0;
+    //PRINT_DEBUG("tmp_pmt_info: %d\n", *index);
+    //show_hex((unsigned char *)&tmp_pmt_info, sizeof(struct TS_PMT));
+    return true;
 }
 
 bool PmtDecode::check_stream_type(unsigned char stream_type)

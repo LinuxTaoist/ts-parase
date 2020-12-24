@@ -72,6 +72,79 @@ struct PMT_PID {
 
 extern struct PMT_PID pmt_pid_collection;
 
+
+/*
+ * table_id's to identify table sections, S.15 in [ETS468]
+ */
+typedef enum  {
+    PAT_SECTION              =  0x00,  /* PAT, Program Association Table */
+    CAT_SECTION              =  0x01,  /* CAT, Conditional Access Table */
+    PMT_SECTION              =  0x02,  /* PMT, Program Map Table */
+    TSDT_SECTION             =  0x03,  /* Transport Stream Description Table */
+    SCENE_SECTION_14496      =  0x04,  /* ISO_IEC_14496_scene_description_section, 13818-1 */
+    OBJECT_SECTION_14496     =  0x05,  /* ISO_IEC_14496_object_description_section, 13818-1 */
+
+    /* 0x06 - 0x09: ITU-T Rec. H.222.0 | ISO/IEC 13818-1 reserved */
+    /* 0x0A - 0x0D: ISO/IEC 13818-6 */
+    /* 0x0E - 0x37: ITU-T Rec. H.222.0 | ISO/IEC 13818-1 reserved */
+
+    /* 0x38 - 0x3F: Defined in ISO/IEC 13818-6 */
+    DSMCC_DL_MSG_SECTION     =  0x3B,  /* DSM-CC Download Message: DSI, DII */
+    DSMCC_DL_DATA_SECTION    =  0x3C,  /* DSM-CC Download Data, DDB */
+    DSMCC_DL_EVENT_SECTION   =  0x3D,  /* DSM-CC Download Event */
+
+    /* 0x40 - 0x7F: ETSI EN 300468 */
+    NIT_SECTION_A_N          =  0x40,  /* NIT, Network Information Table, actual network */
+    NIT_SECTION_O_N          =  0x41,  /* NIT, Network Information Table, other network */
+    SDT_SECTION_A_TS         =  0x42,  /* SDT, Service Description Table, actual TS */
+    /* 0x43..0x45 reserved for future use */
+    SDT_SECTION_O_TS         =  0x46,  /* SDT, Service Description Table, other TS */
+    /* 0x47..0x49 reserved for future use */
+    BAT_SECTION              =  0x4A,  /* BAT, Bouquet Association Table */
+    /* 0x4B..0x4D reserved for future use */
+    EIT_SECTION_A_TS_PF      =  0x4E,  /* EIT, Event Information Table Actual TS, p/f */
+    EIT_SECTION_O_TS_PF      =  0x4F,  /* EIT, Event Information Table Other TS,  p/f */
+    /* Event Information Section for actual and other TS schedule not defined yet
+     * 0x50..0x5F event_information_section - actual_transport_stream, schedule
+     * 0x60..0x6F event_information_section - other_transport_stream, schedule
+     */
+    EIT_SECTION_A_TS_SCHED   =  0x50,  /* high-nibble to mask table_id */
+    EIT_SECTION_A_TS_SCHED_PF =  0x5C,  /* EIT, Actual TS, p/f, sched  */
+    EIT_SECTION_O_TS_SCHED   =  0x60,  /* high-nibble to mask table_id */
+    TDT_SECTION              =  0x70,  /* TDT, Time Date Table */
+    RST_SECTION              =  0x71,  /* RST, Running Status Table */
+    STUFFING_SECTION         =  0x72,  /* ST */
+    TOT_SECTION              =  0x73,  /* TOT, Time Offset Table */
+    AIT_SECTION              =  0x74,  /* AIT, added in MHP spec */
+    CONTAINER_SECTION        =  0x75,  /* TS102323 */
+    RELATED_CONTENT_SECTION  =  0x76,  /* TS102323 */
+    CONTENT_ID_SECTION       =  0x77,  /* TS102323, content identifier section */
+    MPE_FEC_SECTION          =  0x78,  /* EN301192 */
+
+    /* 0x79..0x7D reserved to MHP for future use */
+    RESOLUTION_SECTION       =  0x79,  /* TS102323, resolution notification section */
+    DIT_SECTION              =  0x7E,  /* DIT, Discontinuity Information Table */
+    SIT_SECTION              =  0x7F,  /* SIT, Selection Information Table */
+
+    /* 0x80 - 0x8F: ETSI ETR 289 */
+    LCN_TABLE_SECTION_MEDIASET = 0x85,
+    /* 0x90 - 0xFE: private, user defined */
+
+    FORBIDDEN                =  0xFF,  /* used for stuffing bytes, reserved */
+
+    /* METZ user defined table_ids, table_id's are defined in tinclude.h for internal
+     * processing in tables library
+     */
+    NIT_SECTION_SERVICE_LIST =  0xF9,   /* Nita and Nito service list*/
+    NIT_SECTION_A_AND_O      =  0xFA,   /* NITa and NITo table filter, used for Homechannel search*/
+    SDT_SECTION_A_AND_O_TS   =  0xFB,   /* SDTa and SDTo table filter, used for Homechannel search*/
+    EIT_SECTION_SCHED_UPC    =  0xFC,   /* EIT, Actual/Other TS, p/f, sched for UPC Cablecom */
+    NIT_SECTION_A_N_SCAN     =  0xFD,   /* used to identify ASTRA_SCAN_NIT_LIST */
+    ASIUS_ASTRA_SDT_SECTION  =  0xFE,   /* used to identify ASIUS_ASTRA_SDT_LIST */
+
+} TABLES_TableId_t;
+
+
 /*
  * stream_type coding in PMT, S.45, Table 2-29, [ISO 13818]
  */
@@ -119,7 +192,7 @@ typedef enum  {
     PMT_ST_AAC,
     PMT_ST_HE_AAC,
     PMT_ST_NOT_DEFINED                   /* Metz: init status */
-} MZTABLES_PmtStreamType_t;
+} TABLES_PmtStreamType_t;
 
 
 #endif

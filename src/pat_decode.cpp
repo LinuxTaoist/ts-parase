@@ -20,46 +20,6 @@ struct TS_PAT pat_info;
 
 struct PMT_PID pmt_pid_collection;
 
-#define PRINT_PAT_INFO() \
-{                      \
-    PRINT_INFO("\n\
-    table_id_8b:                           0x%x \n\
-    section_syntax_indicator_1b:           0x%x \n\
-    zero_1b:                               0x%x \n\
-    reserved_1_2b:                         0x%x \n\
-    section_length_12b:                    0x%x \n\
-    transport_stream_id_16b:               0x%x \n\
-    reserved_2_2b:                         0x%x \n\
-    version_number_5b:                     0x%x \n\
-    current_next_indicator_1b:             0x%x \n\
-    section_number_8b:                     0x%x \n\
-    last_section_number_8b:                0x%x \n\
-    CRC:                                   0x%x \n",\
-    pat_info.table_id_8b,                          \
-    pat_info.section_syntax_indicator_1b,          \
-    pat_info.zero_1b,                              \
-    pat_info.reserved_1_2b,                        \
-    pat_info.section_length_12b,                   \
-    pat_info.transport_stream_id_16b,              \
-    pat_info.reserved_2_2b,                        \
-    pat_info.version_number_5b,                    \
-    pat_info.current_next_indicator_1b,            \
-    pat_info.section_number_8b,                    \
-    pat_info.last_section_number_8b,               \
-    pat_info.CRC_32                                \
-);                                                 \
-}
-
-static void show_hex(char *str, int lenth)
-{
-    int i = 0;
-
-    PRINT_INFO("hex_string: ");
-    for(; i<lenth; i++) {
-        PRINT_INFO("%d: 0x%x ", i, str[i]);
-    }
-}
-
 PatDecode* PatDecode::GetInstance()
 {
     static PatDecode instance;

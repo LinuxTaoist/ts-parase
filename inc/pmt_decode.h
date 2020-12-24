@@ -17,13 +17,18 @@
 #define PMT_STREAM_MAX 20
 #define PMT_ES_DESCRIPTORS_MAX 10
 
-#define PROGRAM_INFO_START_POSITION 12
+#define PROGRAM_INFO_START_POSITION 10
 #define PMT_CRC_LENTH  4
+
+struct DESCRIPTOR_DATA {
+    unsigned int language_code;
+    unsigned char audio_type;
+};
 
 struct ES_DESCRIPTORS {
     unsigned char descriptor_tag;
     unsigned int  descriptor_length;
-    unsigned int  descriptor_data;
+    struct DESCRIPTOR_DATA descriptor_data;
 };
 
 struct PMT_STREAM {
@@ -32,7 +37,7 @@ struct PMT_STREAM {
     unsigned int  elementary_pid_13b;
     unsigned char reserved_6_4b;
     unsigned int  es_info_length_12b;
-    struct ES_DESCRIPTORS es_descriptor[PMT_ES_DESCRIPTORS_MAX];
+    struct ES_DESCRIPTORS es_descriptor;
 };
 
 struct TS_PMT {
@@ -62,7 +67,7 @@ public:
     static PmtDecode* GetInstance();
 
     /* @brief: 解析pmt信息 */
-    int get_pmt_info(unsigned char *data, struct TS_PMT *pmt_info);
+    bool get_pmt_info(unsigned char *data, struct TS_PMT *pmt_info, unsigned int *index);
 
 private:
     bool check_stream_type(unsigned char stream_type);
