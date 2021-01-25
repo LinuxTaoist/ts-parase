@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 # 设置编译参数
-set(CMAKE_CXX_FLAGS "-std=c++0x")
+set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++0x -Wall -g")
 
 #include
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)

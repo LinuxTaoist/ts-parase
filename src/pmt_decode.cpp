@@ -1,6 +1,8 @@
 /*
 ********************************************************************************
-* @copyright 2020 Shenzhen Chuangwei-RGB Electronics Co.,Ltd.
+* Copyright (C) 2021, xiang <dx_65535@163.com>.
+* All right reserved.
+*
 * File Name   : pmt_process.h
 * Author      :
 * Version     : V1.0
@@ -25,10 +27,10 @@ PmtDecode* PmtDecode::GetInstance()
 }
 
 /* @brief: 解析pmt信息 */
-bool PmtDecode::get_pmt_info(unsigned char *data, struct TS_PMT *pmt_info, unsigned int *index)
+bool PmtDecode::get_pmt_info(unsigned char *data, struct TS_PMT *pmt_info)
 {
     unsigned char *pos, *pDesc;
-    unsigned int crc_32 = 0, i = 0, crc_start_position = 0;
+    unsigned int i = 0, crc_start_position = 0;
     int program_info_length = 0, section_length = 0, es_info_length = 0, descriptor_length = 0;
     struct TS_PMT tmp_pmt_info;
 
@@ -53,12 +55,12 @@ bool PmtDecode::get_pmt_info(unsigned char *data, struct TS_PMT *pmt_info, unsig
     tmp_pmt_info.reserved_4_4b = data[10]  >> 4;
     tmp_pmt_info.program_info_length_12b = (data[10] & 0x0F) << 8 | data[11];
 
-    crc_start_position = tmp_pmt_info.section_length_12b + 2 - PMT_CRC_LENTH;
+    crc_start_position = 3 + tmp_pmt_info.section_length_12b - PMT_CRC_LENTH;
 
     tmp_pmt_info.CRC_32 = data[crc_start_position] << 24 
-                     | data[crc_start_position] << 16
-                     | data[crc_start_position] << 8 
-                     | data[crc_start_position];
+                     | data[crc_start_position+1] << 16
+                     | data[crc_start_position+2] << 8 
+                     | data[crc_start_position+3];
 
     if (tmp_pmt_info.CRC_32 == pmt_info->CRC_32 && pmt_info->CRC_32 != 0) {
         return false;
@@ -71,10 +73,10 @@ bool PmtDecode::get_pmt_info(unsigned char *data, struct TS_PMT *pmt_info, unsig
     program_info_length = tmp_pmt_info.program_info_length_12b;
 
     /* loop: look for program descriptor */
-    for(;program_info_length > 0;) {
+/*    for(;program_info_length > 0;) {
         PRINT_DEBUG("program_info_length: 0x%x", program_info_length);
     }
-
+*/
     pos += 2 + program_info_length;  // pos pointer to stream_type
 
     /* loop: look for program audio and video pid */
@@ -87,7 +89,7 @@ bool PmtDecode::get_pmt_info(unsigned char *data, struct TS_PMT *pmt_info, unsig
             tmp_pmt_info.compent[i].stream_type_8b = pos[0];
             tmp_pmt_info.compent[i].reserved_5_3b = pos[1] >> 5;
             tmp_pmt_info.compent[i].elementary_pid_13b = 
-                                            pos[1]&0x1F | pos[2];
+                                            (pos[1]&0x1F) <<8 | pos[2];
 
             tmp_pmt_info.compent[i].reserved_6_4b = pos[3] >> 4;
             tmp_pmt_info.compent[i].es_info_length_12b = 
@@ -123,7 +125,7 @@ bool PmtDecode::get_pmt_info(unsigned char *data, struct TS_PMT *pmt_info, unsig
         pos = pos + 5 + ((pos[3] & 0x0F) << 8) + pos[4];
     }
 
-    *index = *index + 1;
+    //*index = *index + 1;
     memcpy(pmt_info, &tmp_pmt_info, sizeof(struct TS_PMT));
     //PRINT_DEBUG("tmp_pmt_info: %d\n", *index);
     //show_hex((unsigned char *)&tmp_pmt_info, sizeof(struct TS_PMT));

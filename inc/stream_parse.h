@@ -1,6 +1,8 @@
 /*
 ********************************************************************************
-* @copyright 2020 Shenzhen Chuangwei-RGB Electronics Co.,Ltd.
+* Copyright (C) 2021, xiang <dx_65535@163.com>.
+* All right reserved.
+*
 * File Name   : stream_parse.h
 * Author      :
 * Version     : V1.0
@@ -20,10 +22,18 @@
 #define PATH_LEN 30
 
 class Parse {
-public:
+  public:
+
     Parse();
+
+    /*
+     * @brief: 获取终端输入的文件路径字符串
+     */
     void get_path(char *file);
 
+    /*
+     * @brief: 获取实例化
+     */
     static Parse* GetInstance();
 
     /*
@@ -47,7 +57,7 @@ public:
     int get_packet_header(struct ORIGIN_DATA *frame);
 
 
-private:
+  private:
     char *buffer;
     char *path;
     FILE *ts_fp;
@@ -57,4 +67,4 @@ private:
     MSG_STATUS get_msg_status();
 };
 
-#endif
+#endif //__STREAM_PARSE_H__

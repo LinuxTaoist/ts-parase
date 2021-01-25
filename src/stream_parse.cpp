@@ -1,6 +1,8 @@
 /*
 ********************************************************************************
-* @copyright 2020 Shenzhen Chuangwei-RGB Electronics Co.,Ltd.
+* Copyright (C) 2021, xiang <dx_65535@163.com>.
+* All right reserved.
+*
 * File Name   : stream_parse.cpp
 * Author      :
 * Version     : V1.0
@@ -17,7 +19,10 @@
 #include "stream_parse.h"
 #include "pat_decode.h"
 #include "pmt_decode.h"
+#include "nit_decode.h"
+#include "eit_decode.h"
 #include "log.h"
+#include "show.h"
 
 #define __DEBUG_CODE__
 
@@ -28,10 +33,12 @@
 using namespace std;
 
 #define PMT_NUM_MAX 100
+#define NIT_NUM_MAX 100
 
 static enum MSG_STATUS process_status = MSG_DEFAULT;
 static struct ORIGIN_DATA tmp_frame;
 static struct TS_PMT pmt_info[PMT_NUM_MAX];
+static struct TS_NIT nit_info[NIT_NUM_MAX];
 
 static unsigned int packet_position = 0;
 static unsigned int pmt_index = 0; 
@@ -72,7 +79,9 @@ void Parse::data_process()
             frame_process(&ts_frame);
         }
     }
-    PRINT_PMT_INFO();
+
+    Show::GetInstance()->pmt_show(pmt_info);
+    //PRINT_PMT_INFO();
     if(ts_fp) {
         fclose(ts_fp);
     }
@@ -100,22 +109,24 @@ int Parse::unpacket(struct ORIGIN_DATA *frame)
         set_msg_status(MSG_COMPLETE);
         memcpy(frame, &tmp_frame, sizeof(struct ORIGIN_DATA));
         memset((void *)&tmp_frame, 0, sizeof(struct ORIGIN_DATA));
-    } 
+    }
 
-    ret = 0;
+    return ret;
 }
 
 int Parse::frame_process(struct ORIGIN_DATA *frame)
 {
     int ret = 0;
     unsigned int i = 0;
-    static int debug = 0;
-//    memset((void *)&pact_data, 0, sizeof(pact_data));
-    get_packet_header(frame);
 
-    /* 获取PAT表信息 */
-    if (pact_data.header.pid_13b == PAT_PID) {
-            PatDecode::GetInstance()->get_pat_info(pact_data.buffer);
+    //memset((void *)&pact_data, 0, sizeof(pact_data));
+    get_packet_header(frame);
+    if (pact_data.header.pid_13b == PAT_PID) {        // PAT表 
+        PatDecode::GetInstance()->get_pat_info(pact_data.buffer);
+    } else if (pact_data.header.pid_13b == NIT_PID) {   // NIT表
+        NitDecode::GetInstance()->get_nit_info(pact_data.buffer, &nit_info[i]);
+    } else if (pact_data.header.pid_13b == EIT_PID) {        // EIT表 
+        EitDecode::GetInstance()->get_eit_info(pact_data.buffer);
     } else if (0) {         //音频
     
     } else if (0) {         //视频
@@ -124,11 +135,14 @@ int Parse::frame_process(struct ORIGIN_DATA *frame)
 
         for (i = 0; i < pmt_pid_collection.count 
                     && pmt_index < pmt_pid_collection.count; i++) {
+
             if (pact_data.header.pid_13b 
                 == pmt_pid_collection.info[i].pmt_13b) {
-  
-                PmtDecode::GetInstance()->get_pmt_info(pact_data.buffer, 
-                                             &pmt_info[pmt_index], &pmt_index);
+
+                PmtDecode::GetInstance()->get_pmt_info(pact_data.buffer,
+                                                       &pmt_info[i]);
+
+                pmt_info[i].pmt_id = pact_data.header.pid_13b;
             }
         }
     }

@@ -1,6 +1,8 @@
 /*
 ********************************************************************************
-* @copyright 2020 Shenzhen Chuangwei-RGB Electronics Co.,Ltd.
+* Copyright (C) 2021, xiang <dx_65535@163.com>.
+* All right reserved.
+*
 * File Name   : debug_code.h
 * Author      :
 * Version     : V1.0
@@ -24,6 +26,7 @@
     int j = 0;                                       \
     for (; j < 4; j++) {                         \
         PRINT_DEBUG("packet_position: %d\n\
+        pmt_id:                  0x%x \n\
         table_id_8b:             0x%x \n\
         program_num_16b:         0x%x \n\
         elementary_pid_13b:      0x%x \n\
@@ -32,13 +35,14 @@
         descriptor_tag:          0x%x \n,\
         language_code:           0x%x \n", \
         j,                                  \
+        pmt_info[j].pmt_id,     \
         pmt_info[j].table_id_8b ,                               \
         pmt_info[j].program_num_16b,            \
         pmt_info[j].pcr_pid_13b,           \
         pmt_info[j].compent[1].elementary_pid_13b , \
         pmt_info[j].compent[1].stream_type_8b , \
         pmt_info[j].compent[1].es_descriptor.descriptor_tag,   \
-        pmt_info[j].compent[1].es_descriptor.descriptor_data.language_code );       \
+        pmt_info[j].compent[1].es_descriptor.descriptor_data.language_code ); \
     } \
 }
 
@@ -95,7 +99,7 @@
 );                                                 \
 }
 
-static void show_hex(unsigned char *str, int lenth)
+inline void show_hex(unsigned char *str, int lenth)
 {
     int i = 0;
 
@@ -105,5 +109,5 @@ static void show_hex(unsigned char *str, int lenth)
     }
 }
 
-#endif
+#endif //__DEBUG_CODE_H__
 

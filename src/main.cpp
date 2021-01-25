@@ -1,6 +1,8 @@
 /*
 ********************************************************************************
-* @copyright 2020 Shenzhen Chuangwei-RGB Electronics Co.,Ltd.
+* Copyright (C) 2021, xiang <dx_65535@163.com>.
+* All right reserved.
+*
 * File Name   : main.cpp
 * Author      :
 * Version     : V1.0

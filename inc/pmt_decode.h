@@ -1,6 +1,8 @@
 /*
 ********************************************************************************
-* @copyright 2020 Shenzhen Chuangwei-RGB Electronics Co.,Ltd.
+* Copyright (C) 2021, xiang <dx_65535@163.com>.
+* All right reserved.
+*
 * File Name   : pat_process.h
 * Author      :
 * Version     : V1.0
@@ -15,7 +17,7 @@
 #define __PMT_DECODE_H__
 
 #define PMT_STREAM_MAX 20
-#define PMT_ES_DESCRIPTORS_MAX 10
+#define PMT_ES_DESCRIPTORS_MAX 100
 
 #define PROGRAM_INFO_START_POSITION 10
 #define PMT_CRC_LENTH  4
@@ -41,6 +43,7 @@ struct PMT_STREAM {
 };
 
 struct TS_PMT {
+    unsigned int  pmt_id;
     unsigned int  table_id_8b;
     unsigned char section_syntax_indicator_1b;
     unsigned char zero_1b;
@@ -62,15 +65,16 @@ struct TS_PMT {
 };
 
 class PmtDecode {
-public:
+  public:
     /* @brief: 实例化 */
     static PmtDecode* GetInstance();
 
     /* @brief: 解析pmt信息 */
-    bool get_pmt_info(unsigned char *data, struct TS_PMT *pmt_info, unsigned int *index);
+    bool get_pmt_info(unsigned char *data, struct TS_PMT *pmt_info);
 
-private:
+  private:
+    /* @brief: 校验流类型 */
     bool check_stream_type(unsigned char stream_type);
 };
 
-#endif
+#endif //__PMT_DECODE_H__

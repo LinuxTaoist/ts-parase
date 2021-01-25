@@ -1,6 +1,8 @@
 /*
 ********************************************************************************
-* @copyright 2020 Shenzhen Chuangwei-RGB Electronics Co.,Ltd.
+* Copyright (C) 2021, xiang <dx_65535@163.com>.
+* All right reserved.
+*
 * File Name   : pat_process.cpp
 * Author      :
 * Version     : V1.0
@@ -28,7 +30,8 @@ PatDecode* PatDecode::GetInstance()
 
 int PatDecode::get_pat_info(unsigned char *data)
 {
-    int ret = 0, i = 0;
+    int ret = 0;
+    unsigned int i = 0;
     static int status_default = 0;
 
     /* 只解析一次PAT表 */
